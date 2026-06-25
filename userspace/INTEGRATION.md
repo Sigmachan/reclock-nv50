@@ -1,11 +1,11 @@
-# 9600gt-pack — обвязка userspace вокруг reclock-nv50
+# userspace/ — обвязка userspace вокруг reclock-nv50
 
-Этот пак — **userspace-половина** проекта `reclock-nv50`. Корневой репозиторий
+Каталог `userspace/` — **userspace-половина** проекта `reclock-nv50`. Корневой репозиторий
 решает ядерную часть (снимает гейт `allow_reclock=false` в `nvkm/subdev/clk/nv50.c`
-и собирает патченый `nouveau.ko`). Пак даёт удобную обвязку вокруг готового модуля:
-установку, оптимизацию, gaming, восстановление графики и контрольную панель.
+и собирает патченый `nouveau.ko`). Этот каталог даёт удобную обвязку вокруг готового
+модуля: установку, оптимизацию, gaming, восстановление графики и контрольную панель.
 
-## Как пак стыкуется с ядерным патчем (ВАЖНО)
+## Как userspace стыкуется с ядерным патчем (ВАЖНО)
 
 На NV50/Tesla (наш G94) **стоковый** `nouveau.ko` отдаёт `-ENOSYS` на запись в
 `pstate` (см. `docs/03`, `docs/04`). Поэтому:
@@ -22,7 +22,7 @@
    scripts/build-nouveau.sh /путь/к/исходникам/ядра   # см. docs/05 §A-B
    # затем БЕЗОПАСНЫЙ dry-run по docs/05 §C (NvMemExec=0), и только потом §D
    ```
-2. **Userspace (этот пак):** после того как reclock реально работает —
+2. **Userspace (этот каталог):** после того как reclock реально работает —
    ```
    userspace/optimize-nouveau-cachyos.sh   # пинит max pstate + mesa + Wayland
    ```
@@ -40,7 +40,7 @@ userspace/reclock-full.sh        # из TTY, с готовым recovery (SSH/Sys
 `assess (RO)` → `build-nouveau.sh` → `dry-run NvMemExec=0` (§C) →
 `live reclock` (§D) → `optimize-nouveau-cachyos.sh`.
 
-## Состав пака
+## Состав userspace/
 
 | Файл | Назначение | Драйвер |
 |---|---|---|
@@ -76,4 +76,4 @@ userspace/reclock-full.sh        # из TTY, с готовым recovery (SSH/Sys
 
 Userspace-скрипты делают бэкапы и идемпотентны. Любые операции, пишущие в железо
 (reclock memory), живут в КОРНЕ репозитория и требуют явного согласия + плана
-восстановления (`docs/05` §D/§E). Пак сам в железо не пишет.
+восстановления (`docs/05` §D/§E). Сам `userspace/` в железо не пишет.
