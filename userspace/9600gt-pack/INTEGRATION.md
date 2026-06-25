@@ -27,11 +27,25 @@
    userspace/9600gt-pack/optimize-nouveau-cachyos.sh   # пинит max pstate + mesa + Wayland
    ```
 
+### Либо одной командой — связанный пайплайн
+
+`reclock-full.sh` гонит весь путь end-to-end с дисциплиной безопасности из `docs/05`:
+
+```
+userspace/9600gt-pack/reclock-full.sh        # из TTY, с готовым recovery (SSH/SysRq)
+# опц.: NV_KSRC=/path/to/linux-7.0.11 userspace/9600gt-pack/reclock-full.sh
+```
+
+Стадии (каждая за явным «go», в железо не пишет до фразы-подтверждения):
+`assess (RO)` → `build-nouveau.sh` → `dry-run NvMemExec=0` (§C) →
+`live reclock` (§D) → `optimize-nouveau-cachyos.sh`.
+
 ## Состав пака
 
 | Файл | Назначение | Драйвер |
 |---|---|---|
 | `nv9600gt.py` | GUI/TUI контрольная панель (stdlib, без зависимостей) | — |
+| `reclock-full.sh` | end-to-end: build → dry-run → live reclock → optimize (gated) | nouveau |
 | `optimize-nouveau-cachyos.sh` | mesa-стек + пин max pstate (нужен патченый модуль) + Wayland | nouveau |
 | `optimize-system-cachyos.sh` | системная оптимизация под слабый CPU (i3-2120, 8 ГБ) | любой |
 | `setup-gaming-9600gt.sh` | Wine + WineD3D (OpenGL), DXVK выключен, virtual-desktop | nouveau |

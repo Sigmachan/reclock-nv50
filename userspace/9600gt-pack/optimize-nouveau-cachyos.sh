@@ -81,6 +81,29 @@ DROPIN=/etc/modprobe.d/nouveau-perf.conf
 printf 'options nouveau config=NvBoost=2\n' | sudo tee "$DROPIN" >/dev/null
 info "Wrote $DROPIN"
 
+# --- 3b. Reclock gate guard (NV50/Tesla: stock module returns -ENOSYS) --------
+# On G94/NV50 the stock nouveau gates reclocking (allow_reclock=false in
+# nvkm/subdev/clk/nv50.c). Pinning a pstate below only helps with the PATCHED
+# module from reclock-nv50 (scripts/build-nouveau.sh + docs/05). We probe the
+# pstate node read-only here and warn loudly if the gate is still closed, so the
+# user doesn't think they got the ~80% win when they're actually stuck at ~10%.
+RECLOCK_OK=0
+PSTATE_NODE="$(find /sys/kernel/debug/dri -name pstate 2>/dev/null | head -1)"
+if [[ -n "$PSTATE_NODE" ]]; then
+  if sudo grep -qiE 'DC:|AC:|[0-9a-f]{2}:' "$PSTATE_NODE" 2>/dev/null; then
+    RECLOCK_OK=1
+    info "pstate node present: $PSTATE_NODE"
+  fi
+else
+  warn "No pstate node found (debugfs not mounted, or module too old)."
+fi
+if [[ "$RECLOCK_OK" -eq 0 ]]; then
+  warn "Reclocking may be GATED on this stock module (NV50 returns -ENOSYS)."
+  warn "For the real ~80% gain, build & load the PATCHED nouveau first:"
+  warn "    reclock-nv50/scripts/build-nouveau.sh   (then docs/05 §C dry-run, §D live)"
+  warn "Continuing — the service below is harmless on a stock module (just no-op)."
+fi
+
 # --- 4. The big win: pin MAX pstate at every boot via systemd ----------------
 # We write a tiny self-contained service that finds the pstate node and sets the
 # highest available level. Works whether the node lives in debugfs or sysfs.
